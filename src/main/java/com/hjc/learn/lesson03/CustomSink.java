@@ -13,8 +13,9 @@ import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 /**
- *
+ * Sink负责把flink处理后的数据输出到外部系统中
  * Operator state
+ * @author houjichao
  */
 public class CustomSink  implements SinkFunction<Tuple2<String, Integer>>, CheckpointedFunction {
     // 用于缓存结果数据的

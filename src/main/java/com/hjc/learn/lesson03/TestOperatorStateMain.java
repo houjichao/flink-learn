@@ -21,7 +21,6 @@ public class TestOperatorStateMain {
 
         dataStreamSource.addSink(new CustomSink(2)).setParallelism(1);
 
-
         env.execute("TestOperatorStateMain...");
     }
 }
