@@ -19,8 +19,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
@@ -76,7 +74,7 @@ public class HotPage {
                 //sum  //自定义窗口输出的结果
                 //每个URL在window里面出现的次数就计算出来
                 //计算每个URL出现的次数
-                .aggregate(new PageCountAgg(),new PageWindowResult())
+                .aggregate(new PageCountAgg(), new PageWindowResult())
                 //按照窗口进行分组
                 .keyBy(UrlView::getWindowEnd)
                 //求TopN
@@ -87,10 +85,9 @@ public class HotPage {
     }
 
     /**
-     * 计算热门热面
-     * K, I, O
+     * 计算热门热面 K, I, O
      */
-    public static class TopNHotPage extends KeyedProcessFunction<Long, UrlView,String> {
+    public static class TopNHotPage extends KeyedProcessFunction<Long, UrlView, String> {
 
         private int topN = 0;
 
@@ -108,11 +105,12 @@ public class HotPage {
 
         //key:url
         //value:count 出现的次数
-        public MapState<String,Long> urlState;
+        public MapState<String, Long> urlState;
+
         @Override
         public void open(Configuration parameters) throws Exception {
             // 注册状态
-            MapStateDescriptor<String,Long> descriptor =
+            MapStateDescriptor<String, Long> descriptor =
                     new MapStateDescriptor<String, Long>(
                             "average",  // 状态的名字
                             String.class, Long.class); // 状态存储的数据类型
@@ -125,7 +123,7 @@ public class HotPage {
                 Context context,
                 Collector<String> out) throws Exception {
 
-            urlState.put(urlView.getUrl(),urlView.getCount());
+            urlState.put(urlView.getUrl(), urlView.getCount());
 
             context.timerService().registerEventTimeTimer(urlView.getWindowEnd() + 1);
 
@@ -136,14 +134,15 @@ public class HotPage {
             List<UrlView> urlViewArrayList = new ArrayList<UrlView>();
 
             List<String> allElementKey = Lists.newArrayList(urlState.keys());
-            for(String url:allElementKey){
-                urlViewArrayList.add(new UrlView(url, new Timestamp(timestamp - 1).getTime(),urlState.get(url).longValue()));
+            for (String url : allElementKey) {
+                urlViewArrayList
+                        .add(new UrlView(url, new Timestamp(timestamp - 1).getTime(), urlState.get(url).longValue()));
             }
             Collections.sort(urlViewArrayList);
 
-            List<UrlView> topN = urlViewArrayList.subList(0,this.topN);
+            List<UrlView> topN = urlViewArrayList.subList(0, this.topN);
 
-            for (UrlView urlView:topN){
+            for (UrlView urlView : topN) {
                 System.out.println(urlView);
             }
             System.out.println("======================");
@@ -153,14 +152,10 @@ public class HotPage {
     }
 
     /**
-     * IN, 输入的数据类型
-     * OUT, 输出的数据类型
-     * KEY, key
-     * W <: Window window的类型
-     *
+     * IN, 输入的数据类型 OUT, 输出的数据类型 KEY, key W <: Window window的类型
      */
     public static class PageWindowResult
-            implements WindowFunction<Long,UrlView, String, TimeWindow> {
+            implements WindowFunction<Long, UrlView, String, TimeWindow> {
 
         @Override
         public void apply(String key, TimeWindow timeWindow, Iterable<Long> iterable,
@@ -175,12 +170,9 @@ public class HotPage {
 
 
     /**
-     * ApacheLogEvent, 输入
-     * Long, 辅助变量，累加变量
-     * Long 输出：URL出现的次数
-     * 实现了一个sum的效果
+     * ApacheLogEvent, 输入 Long, 辅助变量，累加变量 Long 输出：URL出现的次数 实现了一个sum的效果
      */
-    public static class PageCountAgg implements AggregateFunction<ApacheLogEvent,Long,Long> {
+    public static class PageCountAgg implements AggregateFunction<ApacheLogEvent, Long, Long> {
 
         @Override
         public Long createAccumulator() { //初始化辅助变量
@@ -224,6 +216,7 @@ public class HotPage {
     }
 
     private static class TimeStampExtractor implements TimestampAssigner<ApacheLogEvent> {
+
         @Override
         public long extractTimestamp(ApacheLogEvent element, long recordTimestamp) {
             return element.getEventTime();

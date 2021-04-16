@@ -1,5 +1,10 @@
 package com.hjc.learn.lesson05;
 
+/**
+ * 数据路径
+ *
+ * @author houjichao
+ */
 public class DataPath {
 
 
